@@ -1,0 +1,55 @@
+@use "variables" as vars;
+
+.table {
+  width: 100%;
+  border: 2px solid vars.$medium_gray;
+  min-height: 30rem;
+  :global {
+    table {
+      width: 100%;
+      border-spacing: 1rem;
+      border-collapse: collapse;
+      margin-bottom: -2px;
+    }
+    td,
+    th {
+      text-align: left;
+      border: 2px solid vars.$medium_gray;
+      padding: 1rem;
+      &:first-of-type {
+        border-left: none;
+      }
+      &:last-of-type {
+        border-right: none;
+      }
+    }
+    th {
+      font-weight: 600;
+      border-top: none;
+    }
+    tbody {
+      min-height: 6rem;
+    }
+  }
+  .dotColor {
+    background-color: black;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 2rem;
+    flex-basis: 2rem;
+    flex-shrink: 0;
+  }
+  .noData {
+    height: 25rem;
+    width: 100%;
+  }
+  .ageGroup {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    @media screen and (max-width: 1000px) {
+      flex-direction: column;
+      margin: auto;
+    }
+  }
+}

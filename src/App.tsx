@@ -1,38 +1,78 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import "./App.css";
+import React, { useState, useEffect } from "react";
+import Table from "./Table";
+import styles from "./App.module.scss";
+import CountryFilter from "./CountryFilter";
+import { Nationalities, Users } from "./types/User";
+import { APIResponse } from "./types/Client";
+import Header from "./Header";
+import { countries } from "./constants";
+
+const url = "https://randomuser.me/api/";
+
+const getSearchParams = (nats: string[]) =>
+  new URLSearchParams({
+    results: "10",
+    inc: "name,phone,cell,location,dob,login,nat",
+    nat: nats.join(),
+  });
+
+const getInitialNationalitiesState = () => {
+  return countries.reduce((countries, country) => {
+    return {
+      ...countries,
+      [country.value]: {
+        code: country.value,
+        name: country.label,
+        selected: true,
+      },
+    };
+  }, {});
+};
 
 function App() {
-  const [count, setCount] = useState(0);
+  // Both states could be merged into a reducer
+  const [users, setUsers] = useState<Users>([]);
+  const [nationalities, setNationalities] = useState<Nationalities>(
+    getInitialNationalitiesState,
+  );
+
+  useEffect(() => {
+    let ignore = false;
+    const selected = Object.values(nationalities).filter((nat) => nat.selected);
+    const getData = async () => {
+      const params = getSearchParams(selected.map((nat) => nat.code));
+      let data: APIResponse;
+      const response = await fetch(`${url}?${params}`);
+      if (response && response.ok) {
+        data = await response.json();
+        // Submitted: Not using ignore or checking data
+        // setUsers(data.results);
+        // Edited: null check check an check ignore for unmounting
+        if (data && !ignore) setUsers(data.results);
+      }
+      // Need to handle API error https://randomuser.me/documentation#errors
+    };
+
+    if (selected.length) {
+      // could use useTransition or state to unblock the UI between requests
+      getData();
+    } else {
+      // Empty out user state when all filters unchecked
+      setUsers([]);
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [nationalities]);
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://reactjs.org" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-      </div>
-      <h1>React + Vite</h1>
-      <h2>On CodeSandbox!</h2>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR.
-        </p>
-
-        <p>
-          Tip: you can use the inspector button next to address bar to click on
-          components in the preview and open the code in the editor!
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div className={styles.app}>
+      <Header />
+      <CountryFilter
+        nationalities={nationalities}
+        onSelect={setNationalities}
+      />
+      <Table data={users} />
     </div>
   );
 }

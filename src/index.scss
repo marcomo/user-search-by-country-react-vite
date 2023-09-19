@@ -1,0 +1,17 @@
+@use "./utilities";
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 2rem;
+  font-family: "Inter", Arial, sans-serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  color: #595d6a;
+  background: #f0f2f4;
+}
+
+h2,
+h4 {
+  margin: 0;
+}
