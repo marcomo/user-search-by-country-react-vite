@@ -1,10 +1,11 @@
-import React, { FC } from "react";
+import { FC } from "react";
 import { Nationalities } from "./types/User";
 import styles from "./CountryFilter.module.scss";
 
 const CountryFilter: FC<{
-  nationalities: Nationalities;
-  onSelect: (nationalities: Nationalities) => void;
+  onSelect: (nationalities: Nationalities) => void
+  nationalities: Nationalities
+  disabled: boolean
 }> = (props) => {
   return (
     <fieldset className={styles.fieldset}>
@@ -23,15 +24,14 @@ const CountryFilter: FC<{
                 id={nat.code}
                 name={nat.name}
                 checked={nat.selected}
-                onChange={() =>
-                  props.onSelect({
-                    ...props.nationalities,
-                    [nat.code]: {
-                      ...nat,
-                      selected: !nat.selected,
-                    },
-                  })
-                }
+                disabled={props.disabled}
+                onChange={() => props.onSelect({
+                  ...props.nationalities,
+                  [nat.code]: {
+                    ...nat,
+                    selected: !nat.selected,
+                  },
+                })}
               />
             </div>
           );

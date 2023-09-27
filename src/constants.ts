@@ -1,4 +1,6 @@
 import { AgeGroup } from "./types/AgeGroup";
+import { Params } from "./types/Params";
+import { Nationalities } from "./types/User";
 export const ageGroups: AgeGroup[] = [
   {
     id: 1,
@@ -54,3 +56,20 @@ export const countries: { value: string; label: string }[] = [
     label: "United States",
   },
 ];
+
+export const initParams: Params = {
+  results: "10",
+  inc: "name,phone,cell,location,dob,login,nat",
+  nat: Object.values(countries).map((nat) => nat.value).join()
+}
+
+export const initNationalities: Nationalities = countries.reduce((countries, country) => {
+  return {
+    ...countries,
+    [country.value]: {
+      code: country.value,
+      name: country.label,
+      selected: true,
+    },
+  };
+}, {})
