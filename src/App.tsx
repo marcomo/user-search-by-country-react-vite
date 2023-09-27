@@ -1,78 +1,40 @@
-import React, { useState, useEffect } from "react";
-import Table from "./Table";
+import { lazy, Suspense, useState, useTransition } from "react";
+const Users = lazy(() => import("./Users"));
 import styles from "./App.module.scss";
-import CountryFilter from "./CountryFilter";
-import { Nationalities, Users } from "./types/User";
-import { APIResponse } from "./types/Client";
 import Header from "./Header";
-import { countries } from "./constants";
+import ErrorBoundary from "./ErrorBoundary";
+import { Nationalities } from "./types/User";
+import CountryFilter from "./CountryFilter";
+import { initNationalities, initParams } from "./constants";
+import { APIResponse } from "./types/Client";
+import promiseWrapper, { Resource } from "./helpers/promiseWrapper";
+import { fetchUsers } from "./api";
+import { getSearchParams } from "./helpers/getSearchParams";
+import { getNationalitiesParam } from "./helpers/getNationalitiesParam";
 
-const url = "https://randomuser.me/api/";
-
-const getSearchParams = (nats: string[]) =>
-  new URLSearchParams({
-    results: "10",
-    inc: "name,phone,cell,location,dob,login,nat",
-    nat: nats.join(),
-  });
-
-const getInitialNationalitiesState = () => {
-  return countries.reduce((countries, country) => {
-    return {
-      ...countries,
-      [country.value]: {
-        code: country.value,
-        name: country.label,
-        selected: true,
-      },
-    };
-  }, {});
-};
+const initialData = promiseWrapper<APIResponse>(fetchUsers(initParams))
 
 function App() {
-  // Both states could be merged into a reducer
-  const [users, setUsers] = useState<Users>([]);
-  const [nationalities, setNationalities] = useState<Nationalities>(
-    getInitialNationalitiesState,
-  );
+  const [nationalities, setNationalities] = useState<Nationalities>(() => initNationalities)
+  const [resource, setResource] = useState<Resource<APIResponse>>(initialData);
+  const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    let ignore = false;
-    const selected = Object.values(nationalities).filter((nat) => nat.selected);
-    const getData = async () => {
-      const params = getSearchParams(selected.map((nat) => nat.code));
-      let data: APIResponse;
-      const response = await fetch(`${url}?${params}`);
-      if (response && response.ok) {
-        data = await response.json();
-        // Submitted: Not using ignore or checking data
-        // setUsers(data.results);
-        // Edited: null check check an check ignore for unmounting
-        if (data && !ignore) setUsers(data.results);
-      }
-      // Need to handle API error https://randomuser.me/documentation#errors
-    };
-
-    if (selected.length) {
-      // could use useTransition or state to unblock the UI between requests
-      getData();
-    } else {
-      // Empty out user state when all filters unchecked
-      setUsers([]);
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [nationalities]);
-
+  const handleFilter = (nats: Nationalities) => {
+    setNationalities(nats)
+    startTransition(() => {
+      const params = getSearchParams({ nat: getNationalitiesParam(nats) })
+      setResource(promiseWrapper<APIResponse>(fetchUsers(params)))
+    })
+  }
   return (
     <div className={styles.app}>
       <Header />
-      <CountryFilter
-        nationalities={nationalities}
-        onSelect={setNationalities}
-      />
-      <Table data={users} />
+      <CountryFilter onSelect={handleFilter} nationalities={nationalities} disabled={isPending} />
+      <ErrorBoundary fallback="Error loading users.">
+        <Suspense fallback="loading users…">
+          <Users resource={resource} />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

@@ -1,9 +1,9 @@
-import React, { FC } from "react";
+import { FC, memo } from "react";
 import getAgeGroup from "./helpers/ageGroup";
 import styles from "./Table.module.scss";
-import { Users } from "./types/User";
+import { User, Users } from "./types/User";
 
-const Table: FC<{ data: Users }> = (props) => {
+const Table: FC<{ users: Users }> = memo((props) => {
   return (
     <div className={styles.table}>
       <table>
@@ -17,7 +17,7 @@ const Table: FC<{ data: Users }> = (props) => {
         </thead>
         <tbody>
           {/* Add placeholder rows for during fetch */}
-          {props.data.map((user) => {
+          {props.users && props.users?.map((user: User) => {
             const ageGroup = getAgeGroup(user.dob.age);
             return (
               <tr key={user.login.uuid}>
@@ -36,9 +36,9 @@ const Table: FC<{ data: Users }> = (props) => {
                   <div className={`${styles.ageGroup}`}>
                     <div
                       className={`${styles.dotColor}`}
-                      style={{ backgroundColor: ageGroup.color }}
+                      style={{ backgroundColor: ageGroup?.color }}
                     />
-                    <div>{ageGroup.label}</div>
+                    <div>{ageGroup?.label}</div>
                   </div>
                 </td>
                 <td>
@@ -49,13 +49,13 @@ const Table: FC<{ data: Users }> = (props) => {
           })}
         </tbody>
       </table>
-      {props.data.length ? null : (
+      {props.users && props.users?.length ? null : (
         <div className={`${styles.noData} flex-row flex-center`}>
           No items to show
         </div>
       )}
     </div>
   );
-};
+});
 
 export default Table;

@@ -5,6 +5,9 @@
   :global {
     font-size: 1.5rem;
     font-weight: 400;
+    input:disabled {
+      opacity: .5;
+    }
   }
 }
 .checkbox {
